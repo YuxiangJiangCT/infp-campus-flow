@@ -31,6 +31,19 @@ export function useDailyTasks() {
 
   const loadTasks = async () => {
     try {
+      // Check if we have valid Supabase credentials
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        console.log('Supabase not configured, using local storage')
+        const saved = localStorage.getItem('dailyTasks')
+        if (saved) {
+          setTasks(JSON.parse(saved))
+        } else {
+          setTasks(initialTasks)
+        }
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('daily_tasks')
         .select('*')
@@ -38,8 +51,13 @@ export function useDailyTasks() {
 
       if (error) {
         console.error('Error loading tasks:', error)
-        // Use initial tasks as fallback
-        setTasks(initialTasks)
+        // Fallback to localStorage
+        const saved = localStorage.getItem('dailyTasks')
+        if (saved) {
+          setTasks(JSON.parse(saved))
+        } else {
+          setTasks(initialTasks)
+        }
       } else if (data && data.length > 0) {
         setTasks(data)
       } else {
@@ -48,7 +66,13 @@ export function useDailyTasks() {
       }
     } catch (error) {
       console.error('Error loading tasks:', error)
-      setTasks(initialTasks)
+      // Fallback to localStorage
+      const saved = localStorage.getItem('dailyTasks')
+      if (saved) {
+        setTasks(JSON.parse(saved))
+      } else {
+        setTasks(initialTasks)
+      }
     } finally {
       setLoading(false)
     }
@@ -75,67 +99,82 @@ export function useDailyTasks() {
       completed: false,
     }
 
-    try {
-      const { error } = await supabase
-        .from('daily_tasks')
-        .insert([newTask])
+    // Update local state immediately
+    setTasks(prev => [...prev, newTask])
 
-      if (error) {
-        console.error('Error adding task:', error)
-        // Add locally as fallback
-        setTasks(prev => [...prev, newTask])
-      } else {
-        setTasks(prev => [...prev, newTask])
+    // Save to localStorage as backup
+    const updatedTasks = [...tasks, newTask]
+    localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks))
+
+    // Try to save to Supabase if available
+    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      try {
+        const { error } = await supabase
+          .from('daily_tasks')
+          .insert([newTask])
+
+        if (error) {
+          console.error('Error adding task to Supabase:', error)
+        }
+      } catch (error) {
+        console.error('Error adding task to Supabase:', error)
       }
-    } catch (error) {
-      console.error('Error adding task:', error)
-      setTasks(prev => [...prev, newTask])
     }
   }
 
   const updateTask = async (taskId: string, updates: Partial<DailyTask>) => {
-    try {
-      const { error } = await supabase
-        .from('daily_tasks')
-        .update(updates)
-        .eq('id', taskId)
+    // Update locally first
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === taskId ? { ...task, ...updates } : task
+      )
+    )
 
-      if (error) {
-        console.error('Error updating task:', error)
+    // Save to localStorage
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, ...updates } : task
+    )
+    localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks))
+
+    // Try to update in Supabase if available
+    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      try {
+        const { error } = await supabase
+          .from('daily_tasks')
+          .update(updates)
+          .eq('id', taskId)
+
+        if (error) {
+          console.error('Error updating task in Supabase:', error)
+        }
+      } catch (error) {
+        console.error('Error updating task in Supabase:', error)
       }
-      
-      // Update locally regardless
-      setTasks(prev =>
-        prev.map(task =>
-          task.id === taskId ? { ...task, ...updates } : task
-        )
-      )
-    } catch (error) {
-      console.error('Error updating task:', error)
-      setTasks(prev =>
-        prev.map(task =>
-          task.id === taskId ? { ...task, ...updates } : task
-        )
-      )
     }
   }
 
   const deleteTask = async (taskId: string) => {
-    try {
-      const { error } = await supabase
-        .from('daily_tasks')
-        .delete()
-        .eq('id', taskId)
+    // Remove locally first
+    setTasks(prev => prev.filter(task => task.id !== taskId))
 
-      if (error) {
-        console.error('Error deleting task:', error)
+    // Save to localStorage
+    const updatedTasks = tasks.filter(task => task.id !== taskId)
+    localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks))
+
+    // Try to delete from Supabase if available
+    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      try {
+        const { error } = await supabase
+          .from('daily_tasks')
+          .delete()
+          .eq('id', taskId)
+
+        if (error) {
+          console.error('Error deleting task from Supabase:', error)
+        }
+      } catch (error) {
+        console.error('Error deleting task from Supabase:', error)
       }
-
-      // Remove locally regardless
-      setTasks(prev => prev.filter(task => task.id !== taskId))
-    } catch (error) {
-      console.error('Error deleting task:', error)
-      setTasks(prev => prev.filter(task => task.id !== taskId))
     }
   }
 
