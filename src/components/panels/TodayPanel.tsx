@@ -1,9 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 import { JobApplicationModule } from '../modules/JobApplicationModule';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { TaskManager } from '../TaskManager';
 
 interface TimeBlock {
   time: string;
@@ -13,11 +11,6 @@ interface TimeBlock {
   isCompleted?: boolean;
 }
 
-interface DailyTask {
-  id: string;
-  task: string;
-  completed: boolean;
-}
 
 const timeBlocks: TimeBlock[] = [
   {
@@ -63,38 +56,12 @@ const timeBlocks: TimeBlock[] = [
   }
 ];
 
-const initialTasks: DailyTask[] = [
-  { id: '1', task: '早晨日光暴露 5-10分钟', completed: false },
-  { id: '2', task: 'All Ears English 影子跟读', completed: false },
-  { id: '3', task: 'LeetCode 至少1题', completed: false },
-  { id: '4', task: '投递 3-5 份简历', completed: false },
-  { id: '5', task: 'Startup 90分钟', completed: false },
-  { id: '6', task: 'YouTube无字幕 15分钟', completed: false },
-  { id: '7', task: '21:00 手机充电在客厅', completed: false },
-  { id: '8', task: 'Pastor书籍 30分钟', completed: false },
-];
-
 export function TodayPanel() {
-  const [dailyTasks, setDailyTasks] = useLocalStorage<DailyTask[]>('dailyTasks', initialTasks);
-
-  const toggleTask = (taskId: string) => {
-    setDailyTasks((prev: DailyTask[]) =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
-
-  const completedCount = dailyTasks.filter(task => task.completed).length;
-  const progressPercentage = (completedCount / dailyTasks.length) * 100;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">📍 今日安排</h2>
-        <div className="text-sm font-medium text-muted-foreground">
-          进度: {completedCount}/{dailyTasks.length} ({Math.round(progressPercentage)}%)
-        </div>
       </div>
 
       <div className="alert-urgent">
@@ -133,30 +100,7 @@ export function TodayPanel() {
 
         {/* Tasks */}
         <div className="space-y-6">
-          <Card className="gradient-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                ✅ 今日必做
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {dailyTasks.map((task) => (
-                <div 
-                  key={task.id} 
-                  className="flex items-center gap-3 p-3 bg-background rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => toggleTask(task.id)}
-                >
-                  <Checkbox 
-                    checked={task.completed}
-                    onCheckedChange={() => toggleTask(task.id)}
-                  />
-                  <span className={task.completed ? 'line-through text-muted-foreground' : ''}>
-                    {task.task}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <TaskManager />
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-3">
