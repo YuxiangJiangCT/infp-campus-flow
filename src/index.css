@@ -15,7 +15,7 @@
 .floating-window-mini {
   @apply bg-primary/90 backdrop-blur-md rounded-full shadow-lg cursor-pointer;
   padding: 4px 8px;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag;  /* Changed to no-drag to allow clicking */
 }
 
 .floating-header {

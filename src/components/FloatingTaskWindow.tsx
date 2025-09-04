@@ -160,7 +160,7 @@ export function FloatingTaskWindow() {
     // Resize window based on minimized state
     if ((window as any).electronAPI) {
       if (newMinimized) {
-        (window as any).electronAPI.resizeFloatingWindow(200, 40);
+        (window as any).electronAPI.resizeFloatingWindow(250, 50);
       } else {
         (window as any).electronAPI.resizeFloatingWindow(300, 200);
       }
@@ -171,7 +171,8 @@ export function FloatingTaskWindow() {
     return (
       <div 
         className="floating-window-mini"
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setIsMinimized(false);
           // Also resize the window back to full size
           if ((window as any).electronAPI) {
