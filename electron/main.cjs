@@ -36,11 +36,12 @@ function createMainWindow() {
     show: false
   });
 
-  const url = isDev 
-    ? 'http://localhost:8080/infp-campus-flow/'
-    : `file://${path.join(__dirname, '..', 'dist', 'index.html')}`;
-
-  mainWindow.loadURL(url);
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:8080/infp-campus-flow/');
+  } else {
+    // In production, load the index.html file
+    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  }
   
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -75,11 +76,14 @@ function createFloatingWindow() {
     }
   });
 
-  const floatingUrl = isDev 
-    ? 'http://localhost:8080/infp-campus-flow/#/floating'
-    : `file://${path.join(__dirname, '..', 'dist', 'index.html')}#/floating`;
-
-  floatingWindow.loadURL(floatingUrl);
+  if (isDev) {
+    floatingWindow.loadURL('http://localhost:8080/infp-campus-flow/#/floating');
+  } else {
+    // In production, load the index.html file with hash
+    floatingWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'), {
+      hash: '/floating'
+    });
+  }
   
   // Set window level to floating
   floatingWindow.setAlwaysOnTop(true, 'floating');
