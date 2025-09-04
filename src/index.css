@@ -2,6 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Floating Window Styles */
+.floating-window {
+  @apply bg-background/95 backdrop-blur-md rounded-lg shadow-2xl border border-border/50;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  -webkit-app-region: drag;
+}
+
+.floating-window-mini {
+  @apply bg-primary/90 backdrop-blur-md rounded-full shadow-lg cursor-pointer;
+  padding: 4px 8px;
+  -webkit-app-region: drag;
+}
+
+.floating-header {
+  @apply flex items-center justify-between px-3 py-2 border-b border-border/30;
+  -webkit-app-region: drag;
+}
+
+.floating-btn {
+  @apply p-1 rounded hover:bg-muted transition-colors;
+  -webkit-app-region: no-drag;
+}
+
+.floating-content {
+  @apply flex-1 p-3 space-y-3 overflow-hidden;
+  -webkit-app-region: no-drag;
+}
+
+.current-task {
+  @apply p-3 rounded-lg bg-primary/10 border border-primary/20;
+}
+
+.task-time {
+  @apply text-xs font-bold text-primary mb-1;
+}
+
+.task-title {
+  @apply text-sm font-medium text-foreground;
+}
+
+.task-desc {
+  @apply text-xs text-muted-foreground mt-1;
+}
+
+.next-task {
+  @apply p-2 rounded-lg bg-muted/50;
+}
+
+.special-alert {
+  @apply p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-center;
+}
+
+.opacity-control {
+  @apply px-3 pb-2;
+  -webkit-app-region: no-drag;
+}
+
+.opacity-slider {
+  @apply w-full h-1 rounded-full bg-muted;
+  -webkit-appearance: none;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+  @apply w-3 h-3 rounded-full bg-primary cursor-pointer;
+  -webkit-appearance: none;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

@@ -1,0 +1,23 @@
+appId: com.infp.campusflow
+productName: INFP Campus Flow
+directories:
+  output: dist-electron
+  buildResources: build
+files:
+  - electron/**/*
+  - dist/**/*
+  - package.json
+mac:
+  category: public.app-category.productivity
+  icon: public/favicon.ico
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+win:
+  target: nsis
+  icon: public/favicon.ico
+linux:
+  target: AppImage
+  category: Utility
+  icon: public/favicon.ico
