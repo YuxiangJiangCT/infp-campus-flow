@@ -6,6 +6,9 @@ import { JobSearchModule } from '../modules/JobSearchModule';
 import { StartupModule } from '../modules/StartupModule';
 import { PastorBookModule } from '../modules/PastorBookModule';
 import { TaskManager } from '../TaskManager';
+import { ScheduleModeSelector, ScheduleMode } from '../ScheduleModeSelector';
+import { FlexibleSchedulePanel } from './FlexibleSchedulePanel';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface TimeBlock {
   time: string;
@@ -118,6 +121,7 @@ const specialTimeBlocks: TimeBlock[] = [
 
 export function TodayPanel() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [scheduleMode, setScheduleMode] = useLocalStorage<ScheduleMode>('scheduleMode', 'template');
   const dayOfWeek = currentTime.getDay();
   const isSpecialDay = dayOfWeek === 2 || dayOfWeek === 4;
   
@@ -150,12 +154,17 @@ export function TodayPanel() {
 
   const currentBlockIndex = getCurrentBlockIndex();
 
+  if (scheduleMode === 'flexible') {
+    return <FlexibleSchedulePanel />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with day detection */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">📍 今日安排</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <ScheduleModeSelector onModeChange={setScheduleMode} />
           <Badge variant="outline">
             今天是：{dayName}
           </Badge>
