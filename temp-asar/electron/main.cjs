@@ -36,6 +36,11 @@ function createMainWindow() {
     show: false
   });
 
+  // Add developer tools in production for debugging
+  if (!isDev) {
+    mainWindow.webContents.openDevTools();
+  }
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:8080/infp-campus-flow/');
   } else {

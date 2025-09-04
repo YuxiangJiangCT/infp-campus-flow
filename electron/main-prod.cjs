@@ -1,27 +1,15 @@
-const { app, BrowserWindow, Menu, Tray, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, Tray, screen, ipcMain, protocol } = require('electron');
 const path = require('path');
-const { fork } = require('child_process');
+const fs = require('fs');
 
 let mainWindow = null;
 let floatingWindow = null;
 let tray = null;
-let viteServer = null;
 
-const isDev = process.env.NODE_ENV !== 'production';
-
-// Start Vite dev server in development
-function startViteServer() {
-  if (!isDev) return;
-  
-  viteServer = fork(
-    path.join(__dirname, '..', 'node_modules', '.bin', 'vite'),
-    [],
-    {
-      stdio: 'inherit',
-      shell: true
-    }
-  );
-}
+// Register file protocol for serving local files
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } }
+]);
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -30,20 +18,36 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs')
+      preload: path.join(__dirname, 'preload.cjs'),
+      webSecurity: false // Temporarily disable for testing
     },
     icon: path.join(__dirname, '..', 'public', 'favicon.ico'),
     show: false
   });
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:8080/infp-campus-flow/');
+  // Load the index.html file
+  const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+  
+  // Check if file exists
+  if (!fs.existsSync(indexPath)) {
+    console.error('Index file not found at:', indexPath);
+    console.error('Current directory:', __dirname);
+    console.error('Looking for files in:', path.join(__dirname, '..', 'dist'));
+    
+    // Try to list what's available
+    const distPath = path.join(__dirname, '..', 'dist');
+    if (fs.existsSync(distPath)) {
+      console.log('Files in dist:', fs.readdirSync(distPath));
+    }
   } else {
-    // In production, load the index.html file from the correct path
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    console.log('Loading main window from:', indexPath);
-    mainWindow.loadFile(indexPath);
+    console.log('Loading index from:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      console.error('Failed to load index.html:', err);
+    });
   }
+  
+  // Open DevTools for debugging
+  mainWindow.webContents.openDevTools();
   
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -52,10 +56,20 @@ function createMainWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+  
+  // Log any console messages from the renderer
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`Renderer: ${message}`);
+  });
+  
+  // Log navigation errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
 }
 
 function createFloatingWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const { width } = screen.getPrimaryDisplay().workAreaSize;
   
   floatingWindow = new BrowserWindow({
     width: 300,
@@ -74,25 +88,15 @@ function createFloatingWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs')
+      preload: path.join(__dirname, 'preload.cjs'),
+      webSecurity: false
     }
   });
 
-  if (isDev) {
-    floatingWindow.loadURL('http://localhost:8080/infp-campus-flow/#/floating');
-  } else {
-    // In production, load the index.html file with hash
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    console.log('Loading floating window from:', indexPath);
-    floatingWindow.loadFile(indexPath, {
-      hash: '/floating'
-    });
-  }
+  const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+  floatingWindow.loadFile(indexPath, { hash: '/floating' });
   
-  // Set window level to floating
   floatingWindow.setAlwaysOnTop(true, 'floating');
-  
-  // Make window click-through except for specific areas
   floatingWindow.setIgnoreMouseEvents(false);
 
   floatingWindow.on('closed', () => {
@@ -101,20 +105,10 @@ function createFloatingWindow() {
 }
 
 function createTray() {
-  // Create tray icon - use different path for production vs development
-  let iconPath;
-  if (isDev) {
-    iconPath = path.join(__dirname, '..', 'public', 'tray-icon.png');
-  } else {
-    // In production, use resourcesPath
-    iconPath = path.join(process.resourcesPath, 'tray-icon.png');
-  }
+  let iconPath = path.join(process.resourcesPath, 'tray-icon.png');
   
-  // Only create tray if icon exists
-  const fs = require('fs');
   if (!fs.existsSync(iconPath)) {
     console.log('Tray icon not found at:', iconPath);
-    console.log('Skipping tray creation');
     return;
   }
   
@@ -155,7 +149,6 @@ function createTray() {
   tray.setToolTip('INFP Campus Flow - 任务管理');
   tray.setContextMenu(contextMenu);
   
-  // Click on tray icon to show/hide floating window
   tray.on('click', () => {
     if (floatingWindow && floatingWindow.isVisible()) {
       floatingWindow.hide();
@@ -167,7 +160,7 @@ function createTray() {
   });
 }
 
-// IPC handlers for window controls
+// IPC handlers
 ipcMain.on('close-floating-window', () => {
   if (floatingWindow) {
     floatingWindow.close();
@@ -175,8 +168,7 @@ ipcMain.on('close-floating-window', () => {
 });
 
 ipcMain.on('minimize-floating-window', () => {
-  // Don't hide the window, let the React component handle the minimized state
-  // The window stays visible but shows mini mode
+  // Window stays visible but shows mini mode
 });
 
 ipcMain.on('toggle-floating-transparency', (event, transparent) => {
@@ -185,7 +177,6 @@ ipcMain.on('toggle-floating-transparency', (event, transparent) => {
   }
 });
 
-// Handle window resize for mini/full mode
 ipcMain.on('resize-floating-window', (event, { width, height }) => {
   if (floatingWindow) {
     floatingWindow.setSize(width, height);
@@ -193,19 +184,15 @@ ipcMain.on('resize-floating-window', (event, { width, height }) => {
 });
 
 app.whenReady().then(() => {
-  if (isDev) {
-    startViteServer();
-    // Wait for Vite to start
-    setTimeout(() => {
-      createMainWindow();
-      createFloatingWindow();
-      createTray();
-    }, 3000);
-  } else {
-    createMainWindow();
-    createFloatingWindow();
-    createTray();
-  }
+  // Setup custom protocol to serve local files
+  protocol.registerFileProtocol('app', (request, callback) => {
+    const url = request.url.substr(6); // Remove 'app://'
+    callback({ path: path.normalize(path.join(__dirname, '..', url)) });
+  });
+  
+  createMainWindow();
+  createFloatingWindow();
+  createTray();
 });
 
 app.on('window-all-closed', () => {
@@ -217,12 +204,5 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createMainWindow();
-  }
-});
-
-// Clean up on quit
-app.on('before-quit', () => {
-  if (viteServer) {
-    viteServer.kill();
   }
 });
