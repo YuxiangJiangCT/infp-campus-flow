@@ -154,9 +154,16 @@ export function FloatingTaskWindow() {
   };
 
   const handleMinimize = () => {
-    setIsMinimized(!isMinimized);
+    const newMinimized = !isMinimized;
+    setIsMinimized(newMinimized);
+    
+    // Resize window based on minimized state
     if ((window as any).electronAPI) {
-      (window as any).electronAPI.minimizeFloatingWindow();
+      if (newMinimized) {
+        (window as any).electronAPI.resizeFloatingWindow(200, 40);
+      } else {
+        (window as any).electronAPI.resizeFloatingWindow(300, 200);
+      }
     }
   };
 
@@ -167,10 +174,13 @@ export function FloatingTaskWindow() {
         onClick={() => setIsMinimized(false)}
         style={{ opacity }}
       >
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center gap-2 p-2 text-white">
           <Clock className="h-4 w-4" />
           <span className="text-xs font-bold">
             {format(currentTime, 'HH:mm')}
+          </span>
+          <span className="text-xs">
+            {currentBlock.title}
           </span>
         </div>
       </div>

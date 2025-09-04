@@ -151,14 +151,20 @@ ipcMain.on('close-floating-window', () => {
 });
 
 ipcMain.on('minimize-floating-window', () => {
-  if (floatingWindow) {
-    floatingWindow.hide();
-  }
+  // Don't hide the window, let the React component handle the minimized state
+  // The window stays visible but shows mini mode
 });
 
 ipcMain.on('toggle-floating-transparency', (event, transparent) => {
   if (floatingWindow) {
     floatingWindow.setIgnoreMouseEvents(transparent);
+  }
+});
+
+// Handle window resize for mini/full mode
+ipcMain.on('resize-floating-window', (event, { width, height }) => {
+  if (floatingWindow) {
+    floatingWindow.setSize(width, height);
   }
 });
 
