@@ -8,6 +8,7 @@ import { PastorBookModule } from '../modules/PastorBookModule';
 import { TaskManager } from '../TaskManager';
 import { ScheduleModeSelector, ScheduleMode } from '../ScheduleModeSelector';
 import { FlexibleSchedulePanel } from './FlexibleSchedulePanel';
+import { QuickReflectionCard } from '../QuickReflectionCard';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface TimeBlock {
@@ -119,7 +120,11 @@ const specialTimeBlocks: TimeBlock[] = [
   }
 ];
 
-export function TodayPanel() {
+interface TodayPanelProps {
+  onNavigateToReflections?: () => void;
+}
+
+export function TodayPanel({ onNavigateToReflections }: TodayPanelProps = {}) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [scheduleMode, setScheduleMode] = useLocalStorage<ScheduleMode>('scheduleMode', 'template');
   const dayOfWeek = currentTime.getDay();
@@ -158,6 +163,10 @@ export function TodayPanel() {
     return (
       <div className="space-y-6">
         <FlexibleSchedulePanel onModeChange={setScheduleMode} />
+        {/* Add Quick Reflection in flexible mode too */}
+        <QuickReflectionCard 
+          onViewHistory={onNavigateToReflections}
+        />
       </div>
     );
   }
@@ -269,9 +278,12 @@ export function TodayPanel() {
         <StartupModule />
       </div>
       
-      {/* Pastor Book Module */}
+      {/* Reflection and Reading */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PastorBookModule />
+        <QuickReflectionCard 
+          onViewHistory={onNavigateToReflections}
+        />
       </div>
     </div>
   );

@@ -12,9 +12,10 @@ import { EmergencyPanel } from './panels/EmergencyPanel';
 import { StatsPanel } from './panels/StatsPanel';
 import { ReferralTemplatesPanel } from './panels/ReferralTemplatesPanel';
 import { PhoneManagementPanel } from './panels/PhoneManagementPanel';
+import { ReflectionPanel } from './panels/ReflectionPanel';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-export type Tab = 'today' | 'week' | 'schedule' | 'meals' | 'shopping' | 'phone' | 'emergency' | 'stats' | 'referrals';
+export type Tab = 'today' | 'week' | 'schedule' | 'meals' | 'shopping' | 'phone' | 'emergency' | 'stats' | 'referrals' | 'reflections';
 
 interface TabData {
   id: Tab;
@@ -29,6 +30,7 @@ const tabs: TabData[] = [
   { id: 'meals', label: '饮食', icon: '🍱' },
   { id: 'shopping', label: '购物', icon: '🛒' },
   { id: 'phone', label: '手机', icon: '📱' },
+  { id: 'reflections', label: '反思', icon: '📝' },
   { id: 'referrals', label: '内推模板', icon: '🤝' },
   { id: 'emergency', label: '应急', icon: '🆘' },
   { id: 'stats', label: '统计', icon: '📊' },
@@ -50,7 +52,7 @@ export default function InfpSystem() {
   const renderPanel = () => {
     switch (activeTab) {
       case 'today':
-        return <TodayPanel />;
+        return <TodayPanel onNavigateToReflections={() => setActiveTab('reflections')} />;
       case 'week':
         return <WeekPanel />;
       case 'schedule':
@@ -61,6 +63,8 @@ export default function InfpSystem() {
         return <ShoppingPanel />;
       case 'phone':
         return <PhoneManagementPanel />;
+      case 'reflections':
+        return <ReflectionPanel />;
       case 'referrals':
         return <ReferralTemplatesPanel />;
       case 'emergency':
