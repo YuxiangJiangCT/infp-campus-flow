@@ -24,8 +24,11 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Edit2, GripVertical, Clock, CheckCircle2, Circle, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, GripVertical, Clock, CheckCircle2, Circle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFlexibleSchedule, FlexibleTask } from '@/hooks/useFlexibleSchedule';
+import { ScheduleHistoryViewer } from '../ScheduleHistoryViewer';
+import { format, addDays, subDays } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface DraggableTaskProps {
   task: FlexibleTask;
@@ -225,11 +228,15 @@ export function FlexibleSchedulePanel() {
     editTask,
     reorderTasksInBlock,
     clearTodaySchedule,
+    copyScheduleFromDate,
+    getAllSchedules,
+    today,
   } = useFlexibleSchedule();
 
   const [newTaskContent, setNewTaskContent] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -301,6 +308,24 @@ export function FlexibleSchedulePanel() {
     }
   };
 
+  const handleCopySchedule = (date: string) => {
+    const success = copyScheduleFromDate(date);
+    if (success) {
+      // Optionally show a success message
+      console.log(`成功复制 ${date} 的计划到今天`);
+    }
+  };
+
+  const handlePreviousDay = () => {
+    setSelectedDate(prev => subDays(prev, 1));
+  };
+
+  const handleNextDay = () => {
+    setSelectedDate(prev => addDays(prev, 1));
+  };
+
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === today;
+
   const activeTask = activeId
     ? currentSchedule.unassignedTasks.find(t => t.id === activeId) ||
       currentSchedule.timeBlocks.flatMap(b => b.assignedTasks).find(t => t.id === activeId)
@@ -322,7 +347,7 @@ export function FlexibleSchedulePanel() {
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header with Date Navigation */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">🎯 灵活计划模式</h2>
@@ -331,6 +356,11 @@ export function FlexibleSchedulePanel() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <ScheduleHistoryViewer
+              schedules={getAllSchedules()}
+              onCopySchedule={handleCopySchedule}
+              currentDate={today}
+            />
             <Badge variant="outline" className="px-3 py-1">
               完成进度: {completedCount}/{totalCount} ({Math.round((completedCount/totalCount || 0) * 100)}%)
             </Badge>
@@ -342,6 +372,33 @@ export function FlexibleSchedulePanel() {
               清空计划
             </Button>
           </div>
+        </div>
+
+        {/* Date Display */}
+        <div className="flex items-center justify-center gap-4 p-3 bg-muted/30 rounded-lg">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handlePreviousDay}
+            disabled={isToday}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-primary" />
+            <span className="font-medium">
+              {format(selectedDate, 'yyyy年MM月dd日 EEEE', { locale: zhCN })}
+            </span>
+            {isToday && <Badge variant="default">今天</Badge>}
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleNextDay}
+            disabled={isToday}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

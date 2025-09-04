@@ -270,6 +270,46 @@ export function useFlexibleSchedule() {
     return schedules[date] || null;
   }, [schedules]);
 
+  // Get all schedules (for history viewing)
+  const getAllSchedules = useCallback(() => {
+    return schedules;
+  }, [schedules]);
+
+  // Get schedules within a date range
+  const getSchedulesInRange = useCallback((startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const result: Record<string, DailySchedule> = {};
+    
+    Object.entries(schedules).forEach(([date, schedule]) => {
+      const scheduleDate = new Date(date);
+      if (scheduleDate >= start && scheduleDate <= end) {
+        result[date] = schedule;
+      }
+    });
+    
+    return result;
+  }, [schedules]);
+
+  // Get statistics for a schedule
+  const getScheduleStats = useCallback((schedule: DailySchedule) => {
+    const allTasks = [
+      ...schedule.unassignedTasks,
+      ...schedule.timeBlocks.flatMap(b => b.assignedTasks)
+    ];
+    const completedCount = allTasks.filter(t => t.status === 'completed').length;
+    const totalCount = allTasks.length;
+    const assignedCount = schedule.timeBlocks.reduce((sum, block) => sum + block.assignedTasks.length, 0);
+    
+    return {
+      totalTasks: totalCount,
+      completedTasks: completedCount,
+      assignedTasks: assignedCount,
+      unassignedTasks: schedule.unassignedTasks.length,
+      completionRate: totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+    };
+  }, []);
+
   // Clear all tasks for today
   const clearTodaySchedule = useCallback(() => {
     setCurrentSchedule({
@@ -283,8 +323,7 @@ export function useFlexibleSchedule() {
   const copyScheduleFromDate = useCallback((fromDate: string) => {
     const sourceSchedule = schedules[fromDate];
     if (sourceSchedule) {
-      setCurrentSchedule({
-        ...sourceSchedule,
+      const newSchedule = {
         date: today,
         timeBlocks: sourceSchedule.timeBlocks.map(block => ({
           ...block,
@@ -301,9 +340,34 @@ export function useFlexibleSchedule() {
           status: 'pending' as const,
           createdAt: new Date().toISOString()
         }))
-      });
+      };
+      setCurrentSchedule(newSchedule);
+      // Also save to schedules immediately
+      setSchedules(prev => ({
+        ...prev,
+        [today]: newSchedule
+      }));
+      return true;
     }
-  }, [schedules, today]);
+    return false;
+  }, [schedules, today, setSchedules]);
+
+  // Load schedule for a specific date (switch to viewing another date)
+  const loadScheduleForDate = useCallback((date: string) => {
+    const schedule = schedules[date];
+    if (schedule) {
+      return schedule;
+    }
+    // Return empty schedule for that date
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay();
+    const isSpecialDayForDate = dayOfWeek === 2 || dayOfWeek === 4;
+    return {
+      date,
+      timeBlocks: getDefaultTimeBlocks(isSpecialDayForDate),
+      unassignedTasks: []
+    };
+  }, [schedules]);
 
   return {
     currentSchedule,
@@ -315,9 +379,14 @@ export function useFlexibleSchedule() {
     editTask,
     reorderTasksInBlock,
     getScheduleForDate,
+    getAllSchedules,
+    getSchedulesInRange,
+    getScheduleStats,
+    loadScheduleForDate,
     clearTodaySchedule,
     copyScheduleFromDate,
     schedules,
-    isSpecialDay
+    isSpecialDay,
+    today
   };
 }
