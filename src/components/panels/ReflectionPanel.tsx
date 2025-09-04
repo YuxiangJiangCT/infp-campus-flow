@@ -16,7 +16,9 @@ import {
   BookOpen,
   Target,
   Sparkles,
-  Save
+  Save,
+  Languages,
+  Loader2
 } from 'lucide-react';
 import { format, addDays, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -65,23 +67,44 @@ function ReflectionEditor({
 }: { 
   date: string;
   reflection: DailyReflection | null;
-  onSave: (content: string, mood?: Mood) => void;
+  onSave: (content: string, mood?: Mood) => Promise<void>;
 }) {
   const [content, setContent] = useState(reflection?.content || '');
   const [mood, setMood] = useState<Mood | undefined>(reflection?.mood);
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [displayLang, setDisplayLang] = useState<'original' | 'zh' | 'en'>('original');
+
+  // Get displayed content based on selected language
+  const getDisplayContent = () => {
+    if (!reflection) return content;
+    
+    switch (displayLang) {
+      case 'zh':
+        return reflection.contentZh || content;
+      case 'en':
+        return reflection.contentEn || content;
+      default:
+        return content;
+    }
+  };
+  
+  const displayedContent = getDisplayContent();
 
   const wordCount = useMemo(() => {
-    const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
-    const englishWords = content.replace(/[\u4e00-\u9fa5]/g, '').split(/\s+/).filter(w => w).length;
+    const textToCount = displayedContent;
+    const chineseChars = (textToCount.match(/[\u4e00-\u9fa5]/g) || []).length;
+    const englishWords = textToCount.replace(/[\u4e00-\u9fa5]/g, '').split(/\s+/).filter(w => w).length;
     return chineseChars + englishWords;
-  }, [content]);
+  }, [displayedContent]);
 
-  const handleSave = () => {
-    onSave(content, mood);
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 1000);
+    setIsTranslating(true);
+    await onSave(content, mood);
+    setIsSaving(false);
+    setTimeout(() => setIsTranslating(false), 2000);
   };
 
   const insertTemplate = () => {
@@ -139,13 +162,54 @@ function ReflectionEditor({
 
       {/* Footer */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground flex items-center gap-2">
           {wordCount} 字 • {format(new Date(date), 'yyyy年MM月dd日 EEEE', { locale: zhCN })}
+          {isTranslating && (
+            <span className="flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              翻译中...
+            </span>
+          )}
+          {reflection?.originalLang && !isTranslating && (
+            <span className="flex items-center gap-1">
+              <Languages className="h-3 w-3" />
+              {reflection.originalLang === 'zh' ? '中→英' : 
+               reflection.originalLang === 'en' ? '英→中' : '混合'}
+            </span>
+          )}
         </div>
-        <Button onClick={handleSave} disabled={!content.trim()}>
-          <Save className="h-4 w-4 mr-2" />
-          {isSaving ? '保存中...' : '保存'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Language Toggle */}
+          {reflection && (reflection.contentZh || reflection.contentEn) && (
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant={displayLang === 'original' ? 'default' : 'outline'}
+                onClick={() => setDisplayLang('original')}
+              >
+                原文
+              </Button>
+              <Button
+                size="sm"
+                variant={displayLang === 'zh' ? 'default' : 'outline'}
+                onClick={() => setDisplayLang('zh')}
+              >
+                中文
+              </Button>
+              <Button
+                size="sm"
+                variant={displayLang === 'en' ? 'default' : 'outline'}
+                onClick={() => setDisplayLang('en')}
+              >
+                English
+              </Button>
+            </div>
+          )}
+          <Button onClick={handleSave} disabled={!content.trim()}>
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? '保存中...' : '保存'}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -243,8 +307,8 @@ export function ReflectionPanel() {
     setSelectedDate(new Date());
   };
 
-  const handleSaveReflection = (content: string, mood?: Mood) => {
-    saveReflection(selectedDateString, content, mood);
+  const handleSaveReflection = async (content: string, mood?: Mood) => {
+    await saveReflection(selectedDateString, content, mood);
   };
 
   const searchResults = useMemo(() => {

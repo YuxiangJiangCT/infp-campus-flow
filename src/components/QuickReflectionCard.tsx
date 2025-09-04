@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, ChevronUp, History, Save, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, History, Save, Sparkles, Languages, Loader2 } from 'lucide-react';
 import { useReflections, Mood } from '@/hooks/useReflections';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -49,7 +49,9 @@ export function QuickReflectionCard({
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState(0);
+  const [displayLang, setDisplayLang] = useState<'original' | 'zh' | 'en'>('original');
 
   const targetDate = date || today;
   const todayReflection = getTodayReflection();
@@ -71,22 +73,40 @@ export function QuickReflectionCard({
   const handleContentChange = (value: string) => {
     setCurrentContent(value);
     setIsSaving(true);
+    setIsTranslating(true);
   };
 
-  const handleMoodChange = (mood: Mood) => {
+  const handleMoodChange = async (mood: Mood) => {
     setCurrentMood(mood);
-    saveTodayReflection(currentContent, mood);
+    setIsTranslating(true);
+    await saveTodayReflection(currentContent, mood);
+    setIsTranslating(false);
+  };
+  
+  // Get displayed content based on selected language
+  const getDisplayContent = () => {
+    if (!todayReflection) return currentContent;
+    
+    switch (displayLang) {
+      case 'zh':
+        return todayReflection.contentZh || currentContent;
+      case 'en':
+        return todayReflection.contentEn || currentContent;
+      default:
+        return currentContent;
+    }
   };
 
-  // Auto-save indicator
+  // Auto-save and translation indicator
   useEffect(() => {
-    if (isSaving) {
+    if (isSaving || isTranslating) {
       const timer = setTimeout(() => {
         setIsSaving(false);
-      }, 500);
+        setIsTranslating(false);
+      }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [lastSaved, isSaving]);
+  }, [lastSaved, isSaving, isTranslating]);
 
   return (
     <Card className="gradient-card">
@@ -106,6 +126,38 @@ export function QuickReflectionCard({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Language Toggle */}
+            {todayReflection && (todayReflection.contentZh || todayReflection.contentEn) && (
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={displayLang === 'original' ? 'default' : 'ghost'}
+                  onClick={() => setDisplayLang('original')}
+                  className="px-2"
+                  title="Original"
+                >
+                  原
+                </Button>
+                <Button
+                  size="sm"
+                  variant={displayLang === 'zh' ? 'default' : 'ghost'}
+                  onClick={() => setDisplayLang('zh')}
+                  className="px-2"
+                  title="中文"
+                >
+                  中
+                </Button>
+                <Button
+                  size="sm"
+                  variant={displayLang === 'en' ? 'default' : 'ghost'}
+                  onClick={() => setDisplayLang('en')}
+                  className="px-2"
+                  title="English"
+                >
+                  EN
+                </Button>
+              </div>
+            )}
             {onViewHistory && (
               <Button
                 size="sm"
@@ -188,13 +240,25 @@ export function QuickReflectionCard({
           {/* Status Bar */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              {isSaving ? (
+              {isTranslating ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  翻译中...
+                </span>
+              ) : isSaving ? (
                 <span className="flex items-center gap-1">
                   <Save className="h-3 w-3 animate-pulse" />
                   保存中...
                 </span>
               ) : lastSaved ? (
-                <span>
+                <span className="flex items-center gap-1">
+                  {todayReflection?.originalLang && (
+                    <>
+                      <Languages className="h-3 w-3" />
+                      {todayReflection.originalLang === 'zh' ? '中→英' : 
+                       todayReflection.originalLang === 'en' ? '英→中' : '混合'}
+                    </>
+                  )}
                   已保存于 {format(lastSaved, 'HH:mm', { locale: zhCN })}
                 </span>
               ) : (
@@ -211,7 +275,7 @@ export function QuickReflectionCard({
       {!isExpanded && currentContent && (
         <CardContent>
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {currentContent}
+            {getDisplayContent()}
           </p>
         </CardContent>
       )}

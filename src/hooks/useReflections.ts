@@ -1,11 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { autoTranslate } from '@/lib/translationService';
 
 export type Mood = 'great' | 'good' | 'neutral' | 'bad' | 'terrible';
+export type Language = 'zh' | 'en' | 'mixed';
 
 export interface DailyReflection {
   date: string;
   content: string;
+  contentEn?: string;  // English version
+  contentZh?: string;  // Chinese version
+  originalLang?: Language;  // Original writing language
   mood?: Mood;
   tags?: string[];
   createdAt: string;
@@ -53,8 +58,8 @@ export function useReflections() {
   );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Save reflection for a specific date
-  const saveReflection = useCallback((
+  // Save reflection for a specific date with auto-translation
+  const saveReflection = useCallback(async (
     date: string,
     content: string,
     mood?: Mood,
@@ -63,9 +68,27 @@ export function useReflections() {
     const now = new Date().toISOString();
     const wordCount = countWords(content);
     
+    // Auto-translate the content
+    let contentEn = content;
+    let contentZh = content;
+    let originalLang: Language = 'mixed';
+    
+    try {
+      const translation = await autoTranslate(content);
+      contentEn = translation.english;
+      contentZh = translation.chinese;
+      originalLang = translation.originalLang;
+    } catch (error) {
+      console.error('Translation failed:', error);
+      // Keep original content if translation fails
+    }
+    
     const reflection: DailyReflection = {
       date,
       content,
+      contentEn,
+      contentZh,
+      originalLang,
       mood,
       tags,
       wordCount,
@@ -84,11 +107,11 @@ export function useReflections() {
   }, [reflections, setReflections]);
 
   // Save today's reflection
-  const saveTodayReflection = useCallback((content: string, mood?: Mood, tags?: string[]) => {
+  const saveTodayReflection = useCallback(async (content: string, mood?: Mood, tags?: string[]) => {
     setCurrentContent(content);
     setCurrentMood(mood);
     setCurrentTags(tags || []);
-    return saveReflection(today, content, mood, tags);
+    return await saveReflection(today, content, mood, tags);
   }, [today, saveReflection]);
 
   // Get reflection for a specific date
@@ -206,9 +229,9 @@ export function useReflections() {
 
   // Auto-save current content for today
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (currentContent && currentContent !== reflections[today]?.content) {
-        saveReflection(today, currentContent, currentMood, currentTags);
+        await saveReflection(today, currentContent, currentMood, currentTags);
       }
     }, 2000); // Auto-save after 2 seconds of no typing
 
