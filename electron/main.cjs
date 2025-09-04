@@ -37,7 +37,7 @@ function createMainWindow() {
   });
 
   const url = isDev 
-    ? 'http://localhost:8081/infp-campus-flow/'
+    ? 'http://localhost:8080/infp-campus-flow/'
     : `file://${path.join(__dirname, '..', 'dist', 'index.html')}`;
 
   mainWindow.loadURL(url);
@@ -76,7 +76,7 @@ function createFloatingWindow() {
   });
 
   const floatingUrl = isDev 
-    ? 'http://localhost:8081/infp-campus-flow/#/floating'
+    ? 'http://localhost:8080/infp-campus-flow/#/floating'
     : `file://${path.join(__dirname, '..', 'dist', 'index.html')}#/floating`;
 
   floatingWindow.loadURL(floatingUrl);
