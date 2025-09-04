@@ -40,8 +40,9 @@ const defaultTaskTemplates = {
     "16:00-17:00": { title: "运动/活动", description: "身体锻炼或活动" },
     "17:00-19:00": { title: "继续工作", description: "次要任务处理" },
     "19:00-20:00": { title: "晚餐", description: "晚餐时间" },
-    "20:00-21:00": { title: "学习阅读", description: "个人提升时间" },
-    "21:00-23:00": { title: "睡前程序", description: "放松→准备休息" },
+    "20:00-21:00": { title: "Pastor书籍阅读", description: "阅读Pastor书籍→灵修学习" },
+    "21:00-22:00": { title: "学习提升", description: "技术学习→个人成长" },
+    "22:00-23:00": { title: "睡前程序", description: "放松→准备休息" },
   },
   special: {
     "6:30-7:00": { title: "紧急起床", description: "快速起床→准备" },
@@ -68,7 +69,8 @@ const getDefaultTimeBlocks = (isSpecialDay: boolean = false): FlexibleTimeBlock[
     { time: "17:00-19:00", defaultTask: templates["17:00-19:00"], assignedTasks: [] },
     { time: "19:00-20:00", defaultTask: templates["19:00-20:00"], assignedTasks: [] },
     { time: "20:00-21:00", defaultTask: templates["20:00-21:00"], assignedTasks: [] },
-    { time: "21:00-23:00", defaultTask: templates["21:00-23:00"], assignedTasks: [] },
+    { time: "21:00-22:00", defaultTask: templates["21:00-22:00"], assignedTasks: [] },
+    { time: "22:00-23:00", defaultTask: templates["22:00-23:00"], assignedTasks: [] },
   ];
 
   const specialBlocks = [
