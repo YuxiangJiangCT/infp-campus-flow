@@ -171,7 +171,13 @@ export function FloatingTaskWindow() {
     return (
       <div 
         className="floating-window-mini"
-        onClick={() => setIsMinimized(false)}
+        onClick={() => {
+          setIsMinimized(false);
+          // Also resize the window back to full size
+          if ((window as any).electronAPI) {
+            (window as any).electronAPI.resizeFloatingWindow(300, 200);
+          }
+        }}
         style={{ opacity }}
       >
         <div className="flex items-center gap-2 p-2 text-white">
