@@ -155,7 +155,11 @@ export function TodayPanel() {
   const currentBlockIndex = getCurrentBlockIndex();
 
   if (scheduleMode === 'flexible') {
-    return <FlexibleSchedulePanel />;
+    return (
+      <div className="space-y-6">
+        <FlexibleSchedulePanel onModeChange={setScheduleMode} />
+      </div>
+    );
   }
 
   return (

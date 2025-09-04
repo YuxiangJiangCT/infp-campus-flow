@@ -27,6 +27,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { Plus, Trash2, Edit2, GripVertical, Clock, CheckCircle2, Circle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { useFlexibleSchedule, FlexibleTask, DefaultTask } from '@/hooks/useFlexibleSchedule';
 import { ScheduleHistoryViewer } from '../ScheduleHistoryViewer';
+import { ScheduleModeSelector, ScheduleMode } from '../ScheduleModeSelector';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { format, addDays, subDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
@@ -239,7 +241,11 @@ function TimeBlockDropZone({
   );
 }
 
-export function FlexibleSchedulePanel() {
+interface FlexibleSchedulePanelProps {
+  onModeChange?: (mode: ScheduleMode) => void;
+}
+
+export function FlexibleSchedulePanel({ onModeChange }: FlexibleSchedulePanelProps = {}) {
   const {
     currentSchedule,
     addTask,
@@ -260,6 +266,14 @@ export function FlexibleSchedulePanel() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [scheduleMode, setScheduleMode] = useLocalStorage<ScheduleMode>('scheduleMode', 'flexible');
+  
+  const handleModeChange = (mode: ScheduleMode) => {
+    setScheduleMode(mode);
+    if (onModeChange) {
+      onModeChange(mode);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -379,6 +393,7 @@ export function FlexibleSchedulePanel() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <ScheduleModeSelector onModeChange={handleModeChange} />
             <ScheduleHistoryViewer
               schedules={getAllSchedules()}
               onCopySchedule={handleCopySchedule}
