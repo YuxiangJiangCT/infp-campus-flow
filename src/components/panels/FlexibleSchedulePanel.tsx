@@ -24,8 +24,8 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Edit2, GripVertical, Clock, CheckCircle2, Circle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useFlexibleSchedule, FlexibleTask } from '@/hooks/useFlexibleSchedule';
+import { Plus, Trash2, Edit2, GripVertical, Clock, CheckCircle2, Circle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { useFlexibleSchedule, FlexibleTask, DefaultTask } from '@/hooks/useFlexibleSchedule';
 import { ScheduleHistoryViewer } from '../ScheduleHistoryViewer';
 import { format, addDays, subDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -154,6 +154,7 @@ function DraggableTask({ task, onToggle, onEdit, onDelete, isDragging }: Draggab
 interface TimeBlockDropZoneProps {
   timeBlock: {
     time: string;
+    defaultTask?: DefaultTask;
     assignedTasks: FlexibleTask[];
   };
   onTasksReorder: (taskIds: string[]) => void;
@@ -161,6 +162,7 @@ interface TimeBlockDropZoneProps {
   onToggleTask: (taskId: string) => void;
   onEditTask: (taskId: string, content: string) => void;
   onDeleteTask: (taskId: string) => void;
+  onActivateDefault: (timeBlock: string) => void;
 }
 
 function TimeBlockDropZone({
@@ -170,6 +172,7 @@ function TimeBlockDropZone({
   onToggleTask,
   onEditTask,
   onDeleteTask,
+  onActivateDefault,
 }: TimeBlockDropZoneProps) {
   const { setNodeRef } = useSortable({
     id: `timeblock-${timeBlock.time}`,
@@ -193,9 +196,28 @@ function TimeBlockDropZone({
       
       <div className="space-y-2">
         {timeBlock.assignedTasks.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center py-4">
-            拖拽任务到这里
-          </div>
+          timeBlock.defaultTask ? (
+            <div
+              className="p-3 border-dashed border-2 rounded-lg bg-muted/10 cursor-pointer hover:bg-muted/20 transition-all group"
+              onClick={() => onActivateDefault(timeBlock.time)}
+            >
+              <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100">
+                <Circle className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{timeBlock.defaultTask.title}</span>
+              </div>
+              <span className="text-xs text-muted-foreground ml-6 block mt-1">
+                {timeBlock.defaultTask.description}
+              </span>
+              <div className="text-xs text-primary mt-2 opacity-0 group-hover:opacity-100 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                点击激活此任务
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              拖拽任务到这里
+            </div>
+          )
         ) : (
           <SortableContext
             items={timeBlock.assignedTasks.map(t => t.id)}
@@ -227,6 +249,7 @@ export function FlexibleSchedulePanel() {
     deleteTask,
     editTask,
     reorderTasksInBlock,
+    activateDefaultTask,
     clearTodaySchedule,
     copyScheduleFromDate,
     getAllSchedules,
@@ -493,6 +516,7 @@ export function FlexibleSchedulePanel() {
                         onToggleTask={toggleTaskComplete}
                         onEditTask={editTask}
                         onDeleteTask={deleteTask}
+                        onActivateDefault={activateDefaultTask}
                       />
                     ))}
                   </div>

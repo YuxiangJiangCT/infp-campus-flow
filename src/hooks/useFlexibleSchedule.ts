@@ -10,8 +10,14 @@ export interface FlexibleTask {
   order?: number;
 }
 
+export interface DefaultTask {
+  title: string;
+  description: string;
+}
+
 export interface FlexibleTimeBlock {
   time: string;
+  defaultTask?: DefaultTask;
   assignedTasks: FlexibleTask[];
   isCompleted?: boolean;
 }
@@ -22,29 +28,57 @@ export interface DailySchedule {
   unassignedTasks: FlexibleTask[];
 }
 
+// Default task templates for each time block
+const defaultTaskTemplates = {
+  normal: {
+    "7:30-8:00": { title: "起床程序", description: "起床→户外散步→晨间例行" },
+    "8:00-9:00": { title: "早餐+准备", description: "营养早餐→查看邮件→今日规划" },
+    "9:00-12:00": { title: "深度工作", description: "重要任务→专注时间" },
+    "12:00-13:00": { title: "午餐", description: "健康午餐+休息" },
+    "13:00-13:20": { title: "NSDR", description: "午间深度放松" },
+    "13:30-16:00": { title: "项目开发", description: "创造性工作时间" },
+    "16:00-17:00": { title: "运动/活动", description: "身体锻炼或活动" },
+    "17:00-19:00": { title: "继续工作", description: "次要任务处理" },
+    "19:00-20:00": { title: "晚餐", description: "晚餐时间" },
+    "20:00-21:00": { title: "学习阅读", description: "个人提升时间" },
+    "21:00-23:00": { title: "睡前程序", description: "放松→准备休息" },
+  },
+  special: {
+    "6:30-7:00": { title: "紧急起床", description: "快速起床→准备" },
+    "7:00-9:00": { title: "高效早晨", description: "快速早餐→重要任务" },
+    "9:00-12:00": { title: "深度工作", description: "集中处理重要事项" },
+    "12:00-13:00": { title: "午餐", description: "快速午餐" },
+    "14:00-14:30": { title: "Power Nap", description: "能量补充" },
+    "16:20-22:00": { title: "晚课", description: "课程学习时间" },
+    "22:30-23:30": { title: "快速睡前", description: "快速洗漱→休息" },
+  }
+};
+
 const getDefaultTimeBlocks = (isSpecialDay: boolean = false): FlexibleTimeBlock[] => {
+  const templates = isSpecialDay ? defaultTaskTemplates.special : defaultTaskTemplates.normal;
+  
   const normalBlocks = [
-    { time: "7:30-8:00", assignedTasks: [] },
-    { time: "8:00-9:00", assignedTasks: [] },
-    { time: "9:00-12:00", assignedTasks: [] },
-    { time: "12:00-13:00", assignedTasks: [] },
-    { time: "13:00-13:20", assignedTasks: [] },
-    { time: "13:30-16:00", assignedTasks: [] },
-    { time: "16:00-17:00", assignedTasks: [] },
-    { time: "17:00-19:00", assignedTasks: [] },
-    { time: "19:00-20:00", assignedTasks: [] },
-    { time: "20:00-21:00", assignedTasks: [] },
-    { time: "21:00-23:00", assignedTasks: [] },
+    { time: "7:30-8:00", defaultTask: templates["7:30-8:00"], assignedTasks: [] },
+    { time: "8:00-9:00", defaultTask: templates["8:00-9:00"], assignedTasks: [] },
+    { time: "9:00-12:00", defaultTask: templates["9:00-12:00"], assignedTasks: [] },
+    { time: "12:00-13:00", defaultTask: templates["12:00-13:00"], assignedTasks: [] },
+    { time: "13:00-13:20", defaultTask: templates["13:00-13:20"], assignedTasks: [] },
+    { time: "13:30-16:00", defaultTask: templates["13:30-16:00"], assignedTasks: [] },
+    { time: "16:00-17:00", defaultTask: templates["16:00-17:00"], assignedTasks: [] },
+    { time: "17:00-19:00", defaultTask: templates["17:00-19:00"], assignedTasks: [] },
+    { time: "19:00-20:00", defaultTask: templates["19:00-20:00"], assignedTasks: [] },
+    { time: "20:00-21:00", defaultTask: templates["20:00-21:00"], assignedTasks: [] },
+    { time: "21:00-23:00", defaultTask: templates["21:00-23:00"], assignedTasks: [] },
   ];
 
   const specialBlocks = [
-    { time: "6:30-7:00", assignedTasks: [] },
-    { time: "7:00-9:00", assignedTasks: [] },
-    { time: "9:00-12:00", assignedTasks: [] },
-    { time: "12:00-13:00", assignedTasks: [] },
-    { time: "14:00-14:30", assignedTasks: [] },
-    { time: "16:20-22:00", assignedTasks: [] },
-    { time: "22:30-23:30", assignedTasks: [] },
+    { time: "6:30-7:00", defaultTask: templates["6:30-7:00"], assignedTasks: [] },
+    { time: "7:00-9:00", defaultTask: templates["7:00-9:00"], assignedTasks: [] },
+    { time: "9:00-12:00", defaultTask: templates["9:00-12:00"], assignedTasks: [] },
+    { time: "12:00-13:00", defaultTask: templates["12:00-13:00"], assignedTasks: [] },
+    { time: "14:00-14:30", defaultTask: templates["14:00-14:30"], assignedTasks: [] },
+    { time: "16:20-22:00", defaultTask: templates["16:20-22:00"], assignedTasks: [] },
+    { time: "22:30-23:30", defaultTask: templates["22:30-23:30"], assignedTasks: [] },
   ];
 
   return isSpecialDay ? specialBlocks : normalBlocks;
@@ -265,6 +299,34 @@ export function useFlexibleSchedule() {
     });
   }, []);
 
+  // Activate a default task (convert it to a real task)
+  const activateDefaultTask = useCallback((timeBlock: string) => {
+    setCurrentSchedule(prev => {
+      const block = prev.timeBlocks.find(b => b.time === timeBlock);
+      if (!block || !block.defaultTask) return prev;
+
+      const newTask: FlexibleTask = {
+        id: crypto.randomUUID(),
+        content: `${block.defaultTask.title} - ${block.defaultTask.description}`,
+        timeBlock,
+        status: 'assigned',
+        createdAt: new Date().toISOString(),
+      };
+
+      const updatedBlocks = prev.timeBlocks.map(b => {
+        if (b.time === timeBlock) {
+          return {
+            ...b,
+            assignedTasks: [...b.assignedTasks, newTask]
+          };
+        }
+        return b;
+      });
+
+      return { ...prev, timeBlocks: updatedBlocks };
+    });
+  }, []);
+
   // Get schedule for a specific date
   const getScheduleForDate = useCallback((date: string) => {
     return schedules[date] || null;
@@ -378,6 +440,7 @@ export function useFlexibleSchedule() {
     deleteTask,
     editTask,
     reorderTasksInBlock,
+    activateDefaultTask,
     getScheduleForDate,
     getAllSchedules,
     getSchedulesInRange,
