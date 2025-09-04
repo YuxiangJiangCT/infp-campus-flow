@@ -1,7 +1,10 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "infp-campus-flow",
+  "productName": "INFP Campus Flow",
+  "description": "Personal life management system for daily tasks and reflections",
+  "author": "Yuxiang Jiang",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
