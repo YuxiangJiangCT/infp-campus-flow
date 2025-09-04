@@ -30,7 +30,8 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs')
+      preload: path.join(__dirname, 'preload.cjs'),
+      webSecurity: false // Allow ES modules to load
     },
     icon: path.join(__dirname, '..', 'public', 'favicon.ico'),
     show: false
@@ -39,10 +40,23 @@ function createMainWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:8080/infp-campus-flow/');
   } else {
-    // In production, load the index.html file from the correct path
+    // In production, fix and load the HTML file
+    const fs = require('fs');
     const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    console.log('Loading main window from:', indexPath);
-    mainWindow.loadFile(indexPath);
+    let htmlContent = fs.readFileSync(indexPath, 'utf8');
+    
+    // Fix for ES modules in Electron
+    htmlContent = htmlContent.replace(/crossorigin/g, '');
+    const distPath = path.join(__dirname, '..', 'dist');
+    const filePrefix = `file://${distPath}/`;
+    htmlContent = htmlContent.replace(/src="\.\/assets\//g, `src="${filePrefix}assets/`);
+    htmlContent = htmlContent.replace(/href="\.\/assets\//g, `href="${filePrefix}assets/`);
+    
+    const fixedHtmlPath = path.join(distPath, 'index-electron.html');
+    fs.writeFileSync(fixedHtmlPath, htmlContent);
+    
+    console.log('Loading main window from:', fixedHtmlPath);
+    mainWindow.loadFile(fixedHtmlPath);
   }
   
   mainWindow.once('ready-to-show', () => {
@@ -74,17 +88,18 @@ function createFloatingWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.cjs')
+      preload: path.join(__dirname, 'preload.cjs'),
+      webSecurity: false // Allow ES modules to load
     }
   });
 
   if (isDev) {
     floatingWindow.loadURL('http://localhost:8080/infp-campus-flow/#/floating');
   } else {
-    // In production, load the index.html file with hash
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    console.log('Loading floating window from:', indexPath);
-    floatingWindow.loadFile(indexPath, {
+    // In production, use the fixed HTML
+    const fixedHtmlPath = path.join(__dirname, '..', 'dist', 'index-electron.html');
+    console.log('Loading floating window from:', fixedHtmlPath);
+    floatingWindow.loadFile(fixedHtmlPath, {
       hash: '/floating'
     });
   }

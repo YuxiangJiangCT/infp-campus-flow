@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Minimal Test</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff0000, #00ff00);
+            color: white;
+            font-size: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>TEST SUCCESSFUL!</h1>
+        <p>If you see this colorful page, HTML works!</p>
+        <div id="js-test">JavaScript Status: <span style="color: red;">NOT WORKING</span></div>
+    </div>
+    <script>
+        document.getElementById('js-test').innerHTML = 'JavaScript Status: <span style="color: lime;">WORKING!</span>';
+        console.log('JavaScript is working!');
+    </script>
+</body>
+</html>
