@@ -7,6 +7,9 @@ files:
   - electron/**/*
   - dist/**/*
   - package.json
+extraResources:
+  - from: public/tray-icon.png
+    to: tray-icon.png
 mac:
   category: public.app-category.productivity
   hardenedRuntime: true

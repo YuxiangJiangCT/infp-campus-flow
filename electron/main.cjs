@@ -93,8 +93,24 @@ function createFloatingWindow() {
 }
 
 function createTray() {
-  // Create tray icon
-  tray = new Tray(path.join(__dirname, '..', 'public', 'tray-icon.png'));
+  // Create tray icon - use different path for production vs development
+  let iconPath;
+  if (isDev) {
+    iconPath = path.join(__dirname, '..', 'public', 'tray-icon.png');
+  } else {
+    // In production, use resourcesPath
+    iconPath = path.join(process.resourcesPath, 'tray-icon.png');
+  }
+  
+  // Only create tray if icon exists
+  const fs = require('fs');
+  if (!fs.existsSync(iconPath)) {
+    console.log('Tray icon not found at:', iconPath);
+    console.log('Skipping tray creation');
+    return;
+  }
+  
+  tray = new Tray(iconPath);
   
   const contextMenu = Menu.buildFromTemplate([
     {
