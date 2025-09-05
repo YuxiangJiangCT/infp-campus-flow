@@ -265,7 +265,14 @@ function ReflectionList({
                     {reflection.wordCount} 字
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground" style={{ 
+                  display: '-webkit-box',
+                  WebkitLineClamp: 5,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'pre-wrap'
+                }}>
                   {reflection.content}
                 </p>
               </CardContent>
