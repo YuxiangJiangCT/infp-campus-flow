@@ -75,6 +75,7 @@ function ReflectionEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [displayLang, setDisplayLang] = useState<'original' | 'zh' | 'en'>('original');
+  const [isViewMode, setIsViewMode] = useState(!!reflection); // View mode when there's existing reflection
 
   // Get displayed content based on selected language
   const getDisplayContent = () => {
@@ -152,13 +153,45 @@ function ReflectionEditor({
         </Button>
       </div>
 
-      {/* Editor */}
-      <Textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="记录今天的感悟、学习和思考..."
-        className="min-h-[400px] font-mono text-sm"
-      />
+      {/* Editor or Viewer */}
+      {isViewMode ? (
+        <div className="min-h-[400px] p-4 border rounded-lg bg-muted/30">
+          <div className="flex justify-between mb-4">
+            <h4 className="text-sm font-medium text-muted-foreground">查看模式</h4>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setIsViewMode(false)}
+            >
+              编辑内容
+            </Button>
+          </div>
+          <div className="prose prose-sm max-w-none">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">
+              {displayedContent || '暂无内容'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="记录今天的感悟、学习和思考..."
+            className="min-h-[400px] font-mono text-sm"
+          />
+          {reflection && (
+            <Button 
+              size="sm" 
+              variant="ghost"
+              onClick={() => setIsViewMode(true)}
+              className="mt-2"
+            >
+              返回查看模式
+            </Button>
+          )}
+        </>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between">
@@ -207,7 +240,7 @@ function ReflectionEditor({
           )}
           <Button onClick={handleSave} disabled={!content.trim()}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? '保存中...' : '保存'}
+            {isSaving ? '保存中...' : (isViewMode ? '保存修改' : '保存')}
           </Button>
         </div>
       </div>
