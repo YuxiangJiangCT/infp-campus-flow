@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { getNYDateString, getNYDayOfWeek } from '@/utils/timezone';
 
 export interface FlexibleTask {
   id: string;
@@ -97,13 +98,13 @@ const getDefaultTimeBlocks = (isSpecialDay: boolean = false): FlexibleTimeBlock[
 };
 
 const getTodayString = () => {
-  return new Date().toISOString().split('T')[0];
+  return getNYDateString();
 };
 
 export function useFlexibleSchedule() {
   const today = getTodayString();
-  const dayOfWeek = new Date().getDay();
-  const isSpecialDay = dayOfWeek === 2 || dayOfWeek === 4;
+  const dayOfWeek = getNYDayOfWeek();
+  const isSpecialDay = dayOfWeek === 2 || dayOfWeek === 4; // Tuesday or Thursday
   
   const [schedules, setSchedules] = useLocalStorage<Record<string, DailySchedule>>(
     'flexibleSchedules', 

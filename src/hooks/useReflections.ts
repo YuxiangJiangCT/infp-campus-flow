@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { autoTranslate } from '@/lib/translationService';
+import { getNYDateString } from '@/utils/timezone';
 
 export type Mood = 'great' | 'good' | 'neutral' | 'bad' | 'terrible';
 export type Language = 'zh' | 'en' | 'mixed';
@@ -30,7 +31,7 @@ const getMoodEmoji = (mood?: Mood): string => {
 };
 
 const getTodayString = () => {
-  return new Date().toISOString().split('T')[0];
+  return getNYDateString();
 };
 
 const countWords = (text: string): number => {

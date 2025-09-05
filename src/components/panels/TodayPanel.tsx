@@ -10,6 +10,7 @@ import { ScheduleModeSelector, ScheduleMode } from '../ScheduleModeSelector';
 import { FlexibleSchedulePanel } from './FlexibleSchedulePanel';
 import { QuickReflectionCard } from '../QuickReflectionCard';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { getNYDate, getNYTimeString, formatNYDateCN } from '@/utils/timezone';
 
 interface TimeBlock {
   time: string;
@@ -125,7 +126,7 @@ interface TodayPanelProps {
 }
 
 export function TodayPanel({ onNavigateToReflections }: TodayPanelProps = {}) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(getNYDate());
   const [scheduleMode, setScheduleMode] = useLocalStorage<ScheduleMode>('scheduleMode', 'template');
   const dayOfWeek = currentTime.getDay();
   const isSpecialDay = dayOfWeek === 2 || dayOfWeek === 4;
@@ -139,7 +140,7 @@ export function TodayPanel({ onNavigateToReflections }: TodayPanelProps = {}) {
   
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      setCurrentTime(getNYDate());
     }, 60000); // Update every minute
     return () => clearInterval(timer);
   }, []);
