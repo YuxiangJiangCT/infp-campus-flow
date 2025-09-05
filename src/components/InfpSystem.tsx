@@ -14,8 +14,9 @@ import { ReferralTemplatesPanel } from './panels/ReferralTemplatesPanel';
 import { PhoneManagementPanel } from './panels/PhoneManagementPanel';
 import { ReflectionPanel } from './panels/ReflectionPanel';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { DataBackup } from './DataBackup';
 
-export type Tab = 'today' | 'week' | 'schedule' | 'meals' | 'shopping' | 'phone' | 'emergency' | 'stats' | 'referrals' | 'reflections';
+export type Tab = 'today' | 'week' | 'schedule' | 'meals' | 'shopping' | 'phone' | 'emergency' | 'stats' | 'referrals' | 'reflections' | 'backup';
 
 interface TabData {
   id: Tab;
@@ -34,6 +35,7 @@ const tabs: TabData[] = [
   { id: 'referrals', label: '内推模板', icon: '🤝' },
   { id: 'emergency', label: '应急', icon: '🆘' },
   { id: 'stats', label: '统计', icon: '📊' },
+  { id: 'backup', label: '备份', icon: '💾' },
 ];
 
 export default function InfpSystem() {
@@ -71,6 +73,8 @@ export default function InfpSystem() {
         return <EmergencyPanel />;
       case 'stats':
         return <StatsPanel />;
+      case 'backup':
+        return <DataBackup />;
       default:
         return <TodayPanel />;
     }
