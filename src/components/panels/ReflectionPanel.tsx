@@ -79,15 +79,16 @@ function ReflectionEditor({
 
   // Get displayed content based on selected language
   const getDisplayContent = () => {
+    // Always use content for editing, but for viewing, use reflection data
     if (!reflection) return content;
     
     switch (displayLang) {
       case 'zh':
-        return reflection.contentZh || content;
+        return reflection.contentZh || reflection.content || content;
       case 'en':
-        return reflection.contentEn || content;
+        return reflection.contentEn || reflection.content || content;
       default:
-        return content;
+        return reflection.content || content;
     }
   };
   
@@ -168,7 +169,7 @@ function ReflectionEditor({
           </div>
           <div className="prose prose-sm max-w-none">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">
-              {displayedContent || '暂无内容'}
+              {(reflection?.content || content) || '暂无内容'}
             </p>
           </div>
         </div>
