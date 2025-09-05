@@ -6,6 +6,7 @@ import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { FloatingTaskWindow } from "./components/FloatingTaskWindow";
+import './utils/debug-storage'; // Add debug utility for localStorage inspection
 
 const queryClient = new QueryClient();
 
