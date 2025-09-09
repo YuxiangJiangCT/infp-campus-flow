@@ -5,6 +5,7 @@ import { LeetCodeModule } from '../modules/LeetCodeModule';
 import { JobSearchModule } from '../modules/JobSearchModule';
 import { StartupModule } from '../modules/StartupModule';
 import { PastorBookModule } from '../modules/PastorBookModule';
+import { LightManagementModule } from '../modules/LightManagementModule';
 import { TaskManager } from '../TaskManager';
 import { ScheduleModeSelector, ScheduleMode } from '../ScheduleModeSelector';
 import { FlexibleSchedulePanel } from './FlexibleSchedulePanel';
@@ -67,19 +68,29 @@ const normalTimeBlocks: TimeBlock[] = [
     description: "烤肉串1串 + 蔬菜沙拉"
   },
   {
+    time: "20:00",
+    title: "💡 开始调暗灯光",
+    description: "关顶灯→只开暖光台灯→手机Night Shift"
+  },
+  {
     time: "20:00-21:00",
     title: "📖 Pastor书",
-    description: "The Prodigal God 阅读+笔记"
+    description: "The Prodigal God 阅读+笔记（台灯下）"
   },
   {
     time: "21:00",
-    title: "🔴 手机充电",
-    description: "手机充电仪式→放客厅最远插座"
+    title: "🌙 深度调暗+手机充电",
+    description: "只留一盏最暗灯→手机充电放客厅"
+  },
+  {
+    time: "22:00",
+    title: "😴 睡眠模式",
+    description: "卧室最小光源→准备入睡"
   },
   {
     time: "21:30-23:00",
     title: "睡前程序",
-    description: "热水澡→调暗灯光→冥想→23:00入睡"
+    description: "热水澡（暗光）→躺床冥想→23:00入睡"
   }
 ];
 
@@ -279,13 +290,16 @@ export function TodayPanel({ onNavigateToReflections }: TodayPanelProps = {}) {
         <StartupModule />
       </div>
       
-      {/* Reflection and Reading */}
+      {/* Evening Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PastorBookModule />
-        <QuickReflectionCard 
-          onViewHistory={onNavigateToReflections}
-        />
+        <LightManagementModule />
       </div>
+      
+      {/* Reflection */}
+      <QuickReflectionCard 
+        onViewHistory={onNavigateToReflections}
+      />
     </div>
   );
 }

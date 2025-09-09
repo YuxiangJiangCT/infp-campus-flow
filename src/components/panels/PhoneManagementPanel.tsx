@@ -13,12 +13,14 @@ interface PhoneTask {
 }
 
 const eveningTasks: PhoneTask[] = [
-  { id: 'e1', time: '20:30', task: '最后查看所有消息', isEssential: true, completed: false },
-  { id: 'e2', time: '20:45', task: '清理通知红点', isEssential: true, completed: false },
-  { id: 'e3', time: '20:50', task: '截图明日任务', isEssential: false, completed: false },
-  { id: 'e4', time: '21:00', task: '对手机说"See you tomorrow"', isEssential: false, completed: false },
-  { id: 'e5', time: '21:01', task: '充电在客厅最远插座', isEssential: true, completed: false },
-  { id: 'e6', time: '21:02', task: '确认飞行模式', isEssential: true, completed: false }
+  { id: 'e1', time: '20:00', task: '开启Night Shift最暖模式', isEssential: true, completed: false },
+  { id: 'e2', time: '20:00', task: '屏幕亮度调到30%以下', isEssential: true, completed: false },
+  { id: 'e3', time: '20:30', task: '最后查看所有消息', isEssential: true, completed: false },
+  { id: 'e4', time: '20:45', task: '清理通知红点', isEssential: true, completed: false },
+  { id: 'e5', time: '20:50', task: '截图明日任务', isEssential: false, completed: false },
+  { id: 'e6', time: '21:00', task: '对手机说"See you tomorrow"', isEssential: false, completed: false },
+  { id: 'e7', time: '21:01', task: '充电在客厅最远插座（暗处）', isEssential: true, completed: false },
+  { id: 'e8', time: '21:02', task: '确认飞行模式', isEssential: true, completed: false }
 ];
 
 const morningTasks: PhoneTask[] = [
@@ -66,6 +68,11 @@ export function PhoneManagementPanel() {
       <div className="alert-warning">
         <strong>🎯 核心目标：</strong>
         晚9点手机充电在客厅，早9点前不碰手机。这是重夺生活控制权的关键！
+      </div>
+      
+      <div className="alert-info">
+        <strong>💡 灯光协同：</strong>
+        晚8点开始配合灯光管理，手机Night Shift开到最暖，亮度调到30%以下，减少蓝光影响！
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
