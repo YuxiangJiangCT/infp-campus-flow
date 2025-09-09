@@ -9,6 +9,33 @@ let viteServer = null;
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Prepare HTML file for production
+function prepareProductionHTML() {
+  if (isDev) return;
+  
+  const fs = require('fs');
+  const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+  
+  // Check if the source HTML exists
+  if (!fs.existsSync(indexPath)) {
+    console.error('Source HTML not found:', indexPath);
+    return;
+  }
+  
+  let htmlContent = fs.readFileSync(indexPath, 'utf8');
+  
+  // Fix for ES modules in Electron
+  htmlContent = htmlContent.replace(/crossorigin/g, '');
+  const distPath = path.join(__dirname, '..', 'dist');
+  const filePrefix = `file://${distPath}/`;
+  htmlContent = htmlContent.replace(/src="\.\/assets\//g, `src="${filePrefix}assets/`);
+  htmlContent = htmlContent.replace(/href="\.\/assets\//g, `href="${filePrefix}assets/`);
+  
+  const fixedHtmlPath = path.join(distPath, 'index-electron.html');
+  fs.writeFileSync(fixedHtmlPath, htmlContent);
+  console.log('Prepared production HTML:', fixedHtmlPath);
+}
+
 // Start Vite dev server in development
 function startViteServer() {
   if (!isDev) return;
@@ -40,21 +67,8 @@ function createMainWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:8080/infp-campus-flow/');
   } else {
-    // In production, fix and load the HTML file
-    const fs = require('fs');
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    let htmlContent = fs.readFileSync(indexPath, 'utf8');
-    
-    // Fix for ES modules in Electron
-    htmlContent = htmlContent.replace(/crossorigin/g, '');
-    const distPath = path.join(__dirname, '..', 'dist');
-    const filePrefix = `file://${distPath}/`;
-    htmlContent = htmlContent.replace(/src="\.\/assets\//g, `src="${filePrefix}assets/`);
-    htmlContent = htmlContent.replace(/href="\.\/assets\//g, `href="${filePrefix}assets/`);
-    
-    const fixedHtmlPath = path.join(distPath, 'index-electron.html');
-    fs.writeFileSync(fixedHtmlPath, htmlContent);
-    
+    // In production, load the prepared HTML file
+    const fixedHtmlPath = path.join(__dirname, '..', 'dist', 'index-electron.html');
     console.log('Loading main window from:', fixedHtmlPath);
     mainWindow.loadFile(fixedHtmlPath);
   }
@@ -217,6 +231,8 @@ app.whenReady().then(() => {
       createTray();
     }, 3000);
   } else {
+    // Prepare HTML file once for all windows
+    prepareProductionHTML();
     createMainWindow();
     createFloatingWindow();
     createTray();

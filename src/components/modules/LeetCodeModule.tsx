@@ -2,7 +2,20 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { LeetCodeRecoveryPlan } from './LeetCodeRecoveryPlan';
+import { LeetCodeTemplates } from './LeetCodeTemplates';
+import { LeetCodeHighFrequency } from './LeetCodeHighFrequency';
+import { 
+  Zap, 
+  BookOpen, 
+  Target,
+  Brain,
+  AlertCircle
+} from 'lucide-react';
 
 interface LeetCodeTask {
   id: string;
@@ -21,6 +34,8 @@ const weekFocus = {
 export function LeetCodeModule() {
   const currentWeek = Math.ceil((new Date().getDate()) / 7);
   const weekInfo = currentWeek === 1 ? weekFocus[1] : weekFocus[2];
+  const [isRecoveryMode, setIsRecoveryMode] = useLocalStorage('leetcodeRecoveryMode', false);
+  const [activeTab, setActiveTab] = useState<'daily' | 'recovery' | 'templates' | 'highfreq'>('recovery');
   
   const [tasks, setTasks] = useLocalStorage<LeetCodeTask[]>('leetcodeTasks', [
     { 
@@ -69,20 +84,148 @@ export function LeetCodeModule() {
   const completedCount = tasks.filter(t => t.completed).length;
   const progress = (completedCount / tasks.length) * 100;
 
+  if (isRecoveryMode) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <Zap className="h-4 w-4" />
+          <AlertDescription>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold">恢复模式已激活！专注于7天快速恢复计划</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsRecoveryMode(false)}
+              >
+                退出恢复模式
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="recovery">
+              <Zap className="w-4 h-4 mr-1" />
+              恢复计划
+            </TabsTrigger>
+            <TabsTrigger value="templates">
+              <BookOpen className="w-4 h-4 mr-1" />
+              模板库
+            </TabsTrigger>
+            <TabsTrigger value="highfreq">
+              <Target className="w-4 h-4 mr-1" />
+              高频题
+            </TabsTrigger>
+            <TabsTrigger value="daily">
+              <Brain className="w-4 h-4 mr-1" />
+              日常任务
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recovery" className="mt-4">
+            <LeetCodeRecoveryPlan />
+          </TabsContent>
+
+          <TabsContent value="templates" className="mt-4">
+            <LeetCodeTemplates />
+          </TabsContent>
+
+          <TabsContent value="highfreq" className="mt-4">
+            <LeetCodeHighFrequency />
+          </TabsContent>
+
+          <TabsContent value="daily" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>💻 今日常规任务</span>
+                  <Badge variant={progress === 100 ? 'default' : 'secondary'}>
+                    {completedCount}/{tasks.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {tasks.map(task => (
+                    <div 
+                      key={task.id} 
+                      className="flex items-start gap-3 p-2 rounded hover:bg-muted/50"
+                    >
+                      <Checkbox 
+                        checked={task.completed}
+                        onCheckedChange={() => toggleTask(task.id)}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={task.completed ? 'line-through text-muted-foreground' : ''}>
+                            {task.task}
+                          </span>
+                          <Badge 
+                            variant={
+                              task.difficulty === 'Easy' ? 'outline' : 
+                              task.difficulty === 'Medium' ? 'secondary' : 
+                              'destructive'
+                            }
+                            className="text-xs"
+                          >
+                            {task.difficulty}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">⏱️ {task.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>💻 LeetCode任务分解</span>
-          <Badge variant={progress === 100 ? 'default' : 'secondary'}>
-            {completedCount}/{tasks.length}
-          </Badge>
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <span>💻 LeetCode任务分解</span>
+            <Badge variant={progress === 100 ? 'default' : 'secondary'}>
+              {completedCount}/{tasks.length}
+            </Badge>
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsRecoveryMode(true)}
+            className="flex items-center gap-1"
+          >
+            <Zap className="w-4 h-4" />
+            激活恢复模式
+          </Button>
+        </div>
         <div className="text-sm text-muted-foreground">
           本周重点：{weekInfo.focus}
         </div>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <span className="font-semibold">提醒：</span>
+            你有200道题基础，建议激活"恢复模式"使用7天快速恢复计划！
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-3">
           {tasks.map(task => (
             <div 
